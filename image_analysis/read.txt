@@ -1,1 +1,4 @@
-fesfes
+update : 
+
+install these packages before starting the project ->
+python -m pip install anthropic Pillow PyMuPDF shapely ezdxf opencv-python easyocr

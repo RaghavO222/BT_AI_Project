@@ -12,7 +12,10 @@ import pandas as pd
 from datetime import date
 from datetime import datetime
 from contextlib import contextmanager
-from typing import Optional
+from typing import List, Optional
+from fastapi import UploadFile, File
+
+from icnirp.cal import icnirp_cal
 
 
 import httpx
@@ -27,6 +30,7 @@ from get_Prompt import get_prompt_by_code
 
 # ────────────────────────────────────────────────
 # Image analysis imports
+from image_analysis.antena_information.aggregator import antenna_information
 from image_analysis.cooling_equipment.Axial3Kw.analyse_axial3kw import analyze_cool_axial3kv
 from image_analysis.structural_analysis.analyse_pdf_tpvskt import analyse_pdf_tpvskt
 from image_analysis.structural_analysis.analyse_struc_space import analyse_struc_space
@@ -3170,7 +3174,11 @@ async def propose_asbestos(site_type):
 CSV_PATH = "road_traffic/dft_traffic_counts_aadf.csv"
 
 # load once
-df = pd.read_csv(CSV_PATH, low_memory=False)
+df = pd.read_csv(
+    CSV_PATH,
+    low_memory=False,
+    on_bad_lines="skip"
+)
 
 # normalize road names
 df["road_name"] = df["road_name"].astype(str).str.upper().str.strip()
@@ -4031,6 +4039,21 @@ async def propose_radio_loc(
             "data": response_data
         }
     )
+
+@app.post("/test_antenna_info")
+async def test_antenna_infoo(
+    target_images: List[UploadFile] = File(...)
+):
+    return await antenna_information(target_images)
+
+
+@app.post('/test_icnirp_cal')
+async def propose_cad_block(inp: str = Form(...)):
+ 
+    response = icnirp_cal(inp)
+ 
+    return response
+ 
     
     
     
@@ -4574,7 +4597,7 @@ if __name__ == "__main__":
     logger.info(f"Starting server → http://{HOST}:{PORT}  (reload={RELOAD})")
 
     uvicorn.run(
-        "antenna_selection_api:app",
+        "ltbt:app",
         host=HOST,
         port=PORT,
         reload=RELOAD,
